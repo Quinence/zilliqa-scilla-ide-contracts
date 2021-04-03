@@ -1,0 +1,32 @@
+scilla_version 0
+
+(*Associated library*)
+library HelloWorld
+
+let not_owner_code  = Uint32 1
+let set_hello_code  = Uint32 2
+
+(*The contract definition*)
+contract HelloWorld
+(owner: ByStr20)
+
+field welcome_message : String = ""
+
+transition setHello (new_message : String)
+  is_owner = builtin eq owner _sender;
+  match is_owner with
+  | False =>
+    e = {_eventname : "setHello"; code : not_owner_code};
+    event e
+  | True =>
+    welcome_message := new_message;
+    e = {_eventname : "setHello"; code : set_hello_code};
+    event e
+  end
+end
+
+transition getHello ()
+  message_value <- welcome_message;
+  e = {_eventname: "getHello"; message: message_value};
+  event e
+end
