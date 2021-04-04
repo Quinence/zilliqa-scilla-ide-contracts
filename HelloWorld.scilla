@@ -29,12 +29,12 @@ transition setHello (new_message : String)
   (* Check if the sender of the transition is the owner of the contract *)
   is_owner = builtin eq owner _sender;
   match is_owner with
-  (* If the sender of the transition is not the owner *)
   | False =>
+    (* If the sender of the transition is not the owner *)
     e = {_eventname : "setHello"; code : not_owner_code};
     event e
-  (* If the sender of the transition is the owner *)
   | True =>
+    (* If the sender of the transition is the owner *)
     (* Set the mutable variable to the new message provided when calling the transition *)
     welcome_message := new_message;
     e = {_eventname : "setHello"; code : set_hello_code};
