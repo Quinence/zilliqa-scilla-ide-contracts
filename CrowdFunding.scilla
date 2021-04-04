@@ -1,8 +1,11 @@
 scilla_version 0
 
-(*Associated library*)
+(* Imported library *)
 import BoolUtils
 
+(***************************************************)
+(*               Associated library                *)
+(***************************************************)
 library Crowdfunding
 
 let one_msg =
