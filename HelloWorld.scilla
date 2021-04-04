@@ -1,6 +1,7 @@
 scilla_version 0
 (* HelloWorld Contract *)
-(* This example contract demonstrates how a simple contract can be built that stores and retrieves a welcome message in the Blockchain. *)
+(* This example contract demonstrates how a simple contract can be built *)
+(* that stores and retrieves a welcome message in the Blockchain. *)
 
 (***************************************************)
 (*               Associated library                *)
