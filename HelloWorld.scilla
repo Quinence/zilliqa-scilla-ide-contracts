@@ -1,7 +1,10 @@
 scilla_version 0
 (* HelloWorld Contract *)
-(* This example contract demonstrates how a simple contract can be built *)
-(* that stores and retrieves a welcome message in the Blockchain. *)
+(* It is a simple contract that allows a specified account *)
+(* denoted owner to set a welcome message. Setting the welcome *)
+(* message is done via setHello (msg: String). The contract *)
+(* also provides an interface getHello() to allow any account *)
+(* to be returned with the welcome message when called. *)
 
 (***************************************************)
 (*               Associated library                *)
