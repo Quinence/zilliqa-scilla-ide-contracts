@@ -16,11 +16,13 @@ import BoolUtils
 (***************************************************)
 library Crowdfunding
 
+(* A library function to construct a list consisting of one message *)
 let one_msg =
   fun (msg: Message) =>
     let nil_msg = Nil {Message} in
     Cons {Message} msg nil_msg
-    
+
+(* A library function to check if the sender is already a backer *)
 let check_update =
   fun (backers: Map ByStr20 Uint128) =>
   fun (sender: ByStr20) =>
@@ -33,6 +35,8 @@ let check_update =
     | True  => None {Map ByStr20 Uint128}
     end
 
+(* A library function to check if the first block is less than *)
+(* or equal than the second block with respect to the block time *)
 let block_leq =
   fun (block1: BNum) =>
   fun (block2: BNum) =>
