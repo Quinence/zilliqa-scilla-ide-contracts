@@ -1,5 +1,13 @@
 scilla_version 0
 
+(* CrowdFunding Contract *)
+(* Crowdfunding implements a Kickstarter-style campaign *)
+(* where users can donate funds to the contract using Donate(). *)
+(* If the campaign is successful, i.e., enough money is raised *)
+(* within a given time period, the raised money can be sent to a *)
+(* predefined account owner via GetFunds(). Else, if the campaign fails, *)
+(* then contributors can take back their donations via the transition ClaimBack(). *)
+
 (* Imported library *)
 import BoolUtils
 
