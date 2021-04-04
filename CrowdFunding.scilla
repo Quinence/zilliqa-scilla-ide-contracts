@@ -65,10 +65,14 @@ contract Crowdfunding (
   goal: Uint128
 )
 
+(* The mutable variables *)
 field backers: Map ByStr20 Uint128 = Emp ByStr20 Uint128
 field funded: Bool = False
 
+(* The Donate transition *)
 transition Donate ()
+  (* Fetch the value of the blockchain state variable BLOCKNUMBER, *)
+  (* and store it into the local variable block. *)
   block <- & BLOCKNUMBER;
   in_time = block_leq block max_block;
   match in_time with
