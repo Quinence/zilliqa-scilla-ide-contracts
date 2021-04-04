@@ -44,6 +44,7 @@ let block_leq =
     let block_eq = builtin eq block1 block2 in 
     orb block_lt block_eq
 
+(* Library codes to be used for communication *)
 let accepted_code = Int32 1
 let missed_deadline_code = Int32 2
 let already_backed_code  = Int32 3
@@ -55,7 +56,9 @@ let cannot_reclaim_code = Int32 8
 let reclaimed_code = Int32 9
 
 
-(*The contract definition*)
+(***************************************************)
+(*             The contract definition             *)
+(***************************************************)
 contract Crowdfunding (
   owner: ByStr20,
   max_block: BNum,
