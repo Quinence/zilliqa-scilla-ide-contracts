@@ -1,0 +1,59 @@
+scilla_version 0
+(* SchnorrTest Contract *)
+(* A sample contract to test the generation of *)
+(* a Schnorr public/private key pairs, signing of *)
+(* a msg with the private keys, and verification of the signature. *)
+
+(* Imported library *)
+import PairUtils
+
+(***************************************************)
+(*               Associated library                *)
+(***************************************************)
+library Schnorr
+
+(* A library function to construct a list consisting of one message *)
+let one_msg = 
+  fun (msg : Message) => 
+    let nil_msg = Nil {Message} in
+    Cons {Message} msg nil_msg
+
+(* Extract the first and second values of a pair *)
+let fst_f = @fst (ByStr32) (ByStr33)
+let snd_f = @snd (ByStr32) (ByStr33)
+
+(***************************************************)
+(*             The contract definition             *)
+(***************************************************)
+contract Schnorr
+()
+
+(* The mutable variable initiated as None *)
+(* The compressed public key is a 33 bytes integer *)
+field pub_key : Option (ByStr33) = None {ByStr33}
+
+(* The verify transition *)
+transition verify(msg : ByStr, sig : ByStr64)
+  pubk_o <- pub_key;
+  match pubk_o with
+  | Some pubk =>
+    sig = builtin schnorr_verify pubk msg sig;
+    match sig with
+    | True =>
+      (* Schnorr verification is successful *)
+      m = { _tag : ""; _recipient : _sender; _amount : Uint128 0; status : "verification successful" };
+      mone = one_msg m;
+      send mone
+    | False =>
+      (* Schnorr verification failed *)
+      m = { _tag : ""; _recipient : _sender; _amount : Uint128 0; status : "verification failed" };
+      mone = one_msg m;
+      send mone
+    end
+  | None =>
+    (* We don't have a key-pair *)
+    m = { _tag : ""; _recipient : _sender; _amount : Uint128 0; status : "no key error" };
+    mone = one_msg m;
+    send mone
+  end
+end
