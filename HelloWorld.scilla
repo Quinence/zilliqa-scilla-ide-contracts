@@ -1,31 +1,40 @@
 scilla_version 0
 
-(*Associated library*)
+(* Associated library *)
 library HelloWorld
 
+(* Library codes to be used for communication *)
 let not_owner_code  = Uint32 1
 let set_hello_code  = Uint32 2
 
-(*The contract definition*)
+(* The contract definition with the immutable variable *)
 contract HelloWorld
 (owner: ByStr20)
 
+(* The mutable variable initiated as an empty string *)
 field welcome_message : String = ""
 
+(* The setHello transition *)
 transition setHello (new_message : String)
+  (* Check if the sender of the transition is the owner of the contract *)
   is_owner = builtin eq owner _sender;
   match is_owner with
+  (* If the sender of the transition is not the owner *)
   | False =>
     e = {_eventname : "setHello"; code : not_owner_code};
     event e
+  (* If the sender of the transition is the owner *)
   | True =>
+    (* Set the mutable variable to the new message provided when calling the transition *)
     welcome_message := new_message;
     e = {_eventname : "setHello"; code : set_hello_code};
     event e
   end
 end
 
+(* The getHello transition *)
 transition getHello ()
+  (* Fetching the value of the contract field welcome_message and storing in the local variable message_value *)
   message_value <- welcome_message;
   e = {_eventname: "getHello"; message: message_value};
   event e
