@@ -1,14 +1,27 @@
 scilla_version 0
+(* LoveZilliqa Contract *)
+(* It is a simple contract that allows a specified account *)
+(* denoted owner to set a welcome message. Setting the welcome *)
+(* message is done via setHello (msg: String). The contract *)
+(* also provides an interface getHello() to allow any account *)
+(* to be returned with the welcome message when called. *)
 
-(*Associated library*)
+(***************************************************)
+(*               Associated library                *)
+(***************************************************)
 library LoveZilliqa
+
+(* Library codes to be used for communication *)
 let one = Uint256 1
 let true = True
 
-(*The contract definition*)
+(***************************************************)
+(*             The contract definition             *)
+(***************************************************)
 contract LoveZilliqa
 (authorName: String, twitterID: String)
 
+(* The AsciiArt for Zilliqa — for fun! *)
 (* MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM *)
 (* MMMMMMMMMMMMMMMMMMMMWXOOXWMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM *)
 (* MMMMMMMMMMMMMMMMN0xollolllokKWMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM *)
@@ -48,20 +61,25 @@ contract LoveZilliqa
 (* MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMWXOkKNWMMMMMMMMMMMMMMMMMMM *)
 (* MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM *)
 
+(* The mutable variables *)
 field author_name: String = authorName
 field twitter_id: String = twitterID
 field upvote_counter: Uint256 = Uint256 0
 field vote_map: Map ByStr20 Bool = Emp ByStr20 Bool
 
+(* The upvote transition *)
 transition upvote()
   has_voted <- exists vote_map[_sender];
   upvote_count <- upvote_counter;
   match has_voted with
   | True =>
+    (* The transition sender has already upvoted *)
     e = {_eventname: "AlreadyVoted"; upvote_count: upvote_count};
     event e
   | False =>
+    (* The transition sender has not upvoted yet *)
     new_upvote_count = builtin add upvote_count one;
+    (* Update the mutable field variables *)
     vote_map[_sender] := true;
     upvote_counter := new_upvote_count;
     e = {_eventname: "Voted"; shoutout: "Zilliqa loves you!"; upvote_count: new_upvote_count};
@@ -69,6 +87,7 @@ transition upvote()
   end
 end
 
+(* The whoami transition *)
 transition whoami()
  author <- author_name;
  twitter_id_value <- twitter_id;
