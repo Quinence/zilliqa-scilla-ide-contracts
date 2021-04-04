@@ -100,6 +100,7 @@ transition Donate ()
   end 
 end
 
+(* The GetFunds transition *)
 transition GetFunds ()
   is_owner = builtin eq owner _sender;
   match is_owner with
@@ -130,6 +131,7 @@ transition GetFunds ()
   end
 end
 
+(* The ClaimBack transition *)
 transition ClaimBack ()
   block <- & BLOCKNUMBER;
   after_deadline = builtin blt max_block block;
