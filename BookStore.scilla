@@ -91,27 +91,18 @@ transition addMember(name: String, addr: ByStr20, memberType: Uint32)
             p = Pair {(String) (Uint32)} name memberType;
             members[addr] := p;
 
-            msg = {_tag: ""; 
-                    _recipient: _sender; 
-                    _amount: Uint128 0; 
-                    code: code_success};
+            msg = {_tag: ""; _recipient: _sender; _amount: Uint128 0; code: code_success};
             msgs = one_msg msg;
             send msgs 
         | False =>
             (* Code for the membership type is invalid *)
-            msg = {_tag: "";
-                    _recipient: _sender;
-                    _amount: Uint128 0;
-                    code: code_invalid_params};
+            msg = {_tag: ""; _recipient: _sender; _amount: Uint128 0; code: code_invalid_params};
             msgs = one_msg msg;
             send msgs
         end
     | False =>
         (* Unauthorized transaction *)
-        msg = {_tag: "";
-                _recipient: _sender;
-                _amount: Uint128 0;
-                code: code_not_authorized};
+        msg = {_tag: ""; _recipient: _sender; _amount: Uint128 0; code: code_not_authorized};
         msgs = one_msg msg;
         send msgs
     end
@@ -135,10 +126,7 @@ transition addBook(book_title: String, author: String, bookID: Uint32)
     bookExist = builtin contains books bookID;
     match bookExist with
     | True =>
-        msg = {_tag: "";
-                    _recipient: _sender;
-                    _amount: Uint128 0;
-                    code: code_bookid_exist};
+        msg = {_tag: ""; _recipient: _sender; _amount: Uint128 0; code: code_bookid_exist};
         msgs = one_msg msg;
         send msgs
     | False =>
@@ -152,11 +140,7 @@ transition addBook(book_title: String, author: String, bookID: Uint32)
         tmp = Some {Uint32} bookID;
         lastBookID := tmp;
 
-        msg = {_tag: ""; 
-                _recipient: _sender; 
-                _amount: Uint128 0; 
-                code: code_success};
-
+        msg = {_tag: ""; _recipient: _sender; _amount: Uint128 0; code: code_success};
         msgs = one_msg msg;
         send msgs 
     end
@@ -190,10 +174,7 @@ transition updateBook(book_id: Uint32, book_title: String, author: String)
     match exist with
     | False =>
         (* Book ID is not found in the records. *)
-        msg = {_tag: ""; 
-                _recipient: _sender; 
-                _amount: Uint128 0; 
-                code: code_book_not_found};
+        msg = {_tag: ""; _recipient: _sender; _amount: Uint128 0; code: code_book_not_found};
         msgs = one_msg msg;
         send msgs
     | True =>
@@ -204,10 +185,7 @@ transition updateBook(book_id: Uint32, book_title: String, author: String)
         (* Add the new book to the book_inventory Map, with BookID as the key*)
         bookInventory[book_id] := new_book;
 
-        msg = {_tag: ""; 
-                _recipient: _sender; 
-                _amount: Uint128 0; 
-                code: code_success};
+        msg = {_tag: ""; _recipient: _sender; _amount: Uint128 0; code: code_success};
         msgs = one_msg msg;
         send msgs
     end

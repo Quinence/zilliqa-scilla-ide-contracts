@@ -18,31 +18,31 @@ library Crowdfunding
 
 (* A library function to construct a list consisting of one message *)
 let one_msg =
-  fun (msg: Message) =>
-    let nil_msg = Nil {Message} in
-    Cons {Message} msg nil_msg
+    fun (msg: Message) =>
+        let nil_msg = Nil {Message} in
+        Cons {Message} msg nil_msg
 
 (* A library function to check if the sender is already a backer *)
 let check_update =
-  fun (backers: Map ByStr20 Uint128) =>
-  fun (sender: ByStr20) =>
-  fun (amount: Uint128) =>
-    let sender_is_backer = builtin contains backers sender in
-    match sender_is_backer with 
-    | False => 
-      let new_backers = builtin put backers sender amount in
-      Some {Map ByStr20 Uint128} new_backers 
-    | True  => None {Map ByStr20 Uint128}
-    end
+    fun (backers: Map ByStr20 Uint128) =>
+    fun (sender: ByStr20) =>
+    fun (amount: Uint128) =>
+        let sender_is_backer = builtin contains backers sender in
+        match sender_is_backer with 
+        | False => 
+            let new_backers = builtin put backers sender amount in
+            Some {Map ByStr20 Uint128} new_backers 
+        | True  => None {Map ByStr20 Uint128}
+        end
 
 (* A library function to check if the first block is less than *)
 (* or equal than the second block with respect to the block time *)
 let block_leq =
-  fun (block1: BNum) =>
-  fun (block2: BNum) =>
-    let block_lt = builtin blt block1 block2 in 
-    let block_eq = builtin eq block1 block2 in 
-    orb block_lt block_eq
+    fun (block1: BNum) =>
+    fun (block2: BNum) =>
+        let block_lt = builtin blt block1 block2 in 
+        let block_eq = builtin eq block1 block2 in 
+        orb block_lt block_eq
 
 (* Library codes to be used for communication *)
 let accepted_code = Int32 1
@@ -60,9 +60,9 @@ let reclaimed_code = Int32 9
 (*             The contract definition             *)
 (***************************************************)
 contract Crowdfunding (
-  owner: ByStr20,
-  max_block: BNum,
-  goal: Uint128
+    owner: ByStr20,
+    max_block: BNum,
+    goal: Uint128
 )
 
 (* The mutable variables *)
@@ -71,105 +71,105 @@ field funded: Bool = False
 
 (* The Donate transition *)
 transition Donate ()
-  (* Fetch the value of the blockchain state variable BLOCKNUMBER, *)
-  (* and store it into the local variable block. *)
-  block <- & BLOCKNUMBER;
-  in_time = block_leq block max_block;
-  match in_time with
-  | True =>
-    backers_list <- backers;
-    res = check_update backers_list _sender _amount;
-    match res with
-    | None => 
-      msg = {_tag: ""; _recipient: _sender; _amount: Uint128 0; code: already_backed_code};
-      msgs = one_msg msg;
-      send msgs
-    | Some backers_list =>
-      backers := backers_list; 
-      accept; 
-      msg = {_tag: ""; _recipient: _sender; _amount: Uint128 0; code: accepted_code};
-      msgs = one_msg msg;
-      e = { _eventname: "DonationAccepted"; donor: _sender; amount: _amount };
-      event e;
-      send msgs
-    end
-  | False =>
-    msg = {_tag: ""; _recipient: _sender; _amount: Uint128 0; code: missed_deadline_code};
-    msgs = one_msg msg;
-    send msgs
-  end 
+    (* Fetch the value of the blockchain state variable BLOCKNUMBER, *)
+    (* and store it into the local variable block. *)
+    block <- & BLOCKNUMBER;
+    in_time = block_leq block max_block;
+    match in_time with
+    | True =>
+        backers_list <- backers;
+        res = check_update backers_list _sender _amount;
+        match res with
+        | None => 
+            msg = {_tag: ""; _recipient: _sender; _amount: Uint128 0; code: already_backed_code};
+            msgs = one_msg msg;
+            send msgs
+        | Some backers_list =>
+            backers := backers_list; 
+            accept; 
+            msg = {_tag: ""; _recipient: _sender; _amount: Uint128 0; code: accepted_code};
+            msgs = one_msg msg;
+            e = { _eventname: "DonationAccepted"; donor: _sender; amount: _amount };
+            event e;
+            send msgs
+        end
+    | False =>
+        msg = {_tag: ""; _recipient: _sender; _amount: Uint128 0; code: missed_deadline_code};
+        msgs = one_msg msg;
+        send msgs
+    end 
 end
 
 (* The GetFunds transition *)
 transition GetFunds ()
-  is_owner = builtin eq owner _sender;
-  match is_owner with
-  | False =>
-    msg = {_tag: ""; _recipient: _sender; _amount: Uint128 0; code: not_owner_code};
-    msgs = one_msg msg;
-    send msgs
-  | True =>
-    block <- & BLOCKNUMBER;
-    in_time = block_leq block max_block;
-    not_in_time = negb in_time;
-    current_balance <- _balance;
-    goal_not_met = builtin lt current_balance goal;
-    goal_met = negb goal_not_met;
-    cannot_get_funds_check = andb not_in_time goal_not_met;
-    match cannot_get_funds_check with
+    is_owner = builtin eq owner _sender;
+    match is_owner with
     | False =>
-      msg = {_tag: ""; _recipient: _sender; _amount: Uint128 0; code: cannot_get_funds_code};
-      msgs = one_msg msg;
-      send msgs
+        msg = {_tag: ""; _recipient: _sender; _amount: Uint128 0; code: not_owner_code};
+        msgs = one_msg msg;
+        send msgs
     | True =>
-      true = True;
-      funded := true;
-      msg = {_tag: ""; _recipient: owner; _amount: current_balance; code: got_funds_code};
-      msgs = one_msg msg;
-      send msgs
+        block <- & BLOCKNUMBER;
+        in_time = block_leq block max_block;
+        not_in_time = negb in_time;
+        current_balance <- _balance;
+        goal_not_met = builtin lt current_balance goal;
+        goal_met = negb goal_not_met;
+        cannot_get_funds_check = andb not_in_time goal_not_met;
+        match cannot_get_funds_check with
+        | False =>
+            msg = {_tag: ""; _recipient: _sender; _amount: Uint128 0; code: cannot_get_funds_code};
+            msgs = one_msg msg;
+            send msgs
+        | True =>
+            true = True;
+            funded := true;
+            msg = {_tag: ""; _recipient: owner; _amount: current_balance; code: got_funds_code};
+            msgs = one_msg msg;
+            send msgs
+        end
     end
-  end
 end
 
 (* The ClaimBack transition *)
 transition ClaimBack ()
-  block <- & BLOCKNUMBER;
-  after_deadline = builtin blt max_block block;
-  match after_deadline with
-  | False =>
-    msg = {_tag: ""; _recipient: _sender; _amount: Uint128 0; code: too_early_code};
-    msgs = one_msg msg;
-    send msgs
-  | True =>
-    backers <- backers;
-    current_balance <- _balance;
-    is_funded <- funded;
-    goal_not_met = builtin lt current_balance goal;
-    sender_is_backer = builtin contains backers _sender;
-    not_funded = negb is_funded;
-    backer_and_no_goal = andb goal_not_met sender_is_backer;
-    backer_and_no_goal_and_not_funded = andb not_funded backer_and_no_goal;
-    match backer_and_no_goal_and_not_funded with
+    block <- & BLOCKNUMBER;
+    after_deadline = builtin blt max_block block;
+    match after_deadline with
     | False =>
-      msg = {_tag: ""; _recipient: _sender; _amount: Uint128 0;code: cannot_reclaim_code};
-      msgs = one_msg msg;
-      send msgs
+        msg = {_tag: ""; _recipient: _sender; _amount: Uint128 0; code: too_early_code};
+        msgs = one_msg msg;
+        send msgs
     | True =>
-      res = builtin get backers _sender;
-      match res with
-      | None =>
-        msg = {_tag: ""; _recipient: _sender; _amount: Uint128 0; code: cannot_reclaim_code};
-        msgs = one_msg msg;
-        send msgs
-      | Some res =>
-        new_backers = builtin remove backers _sender;
-        backers := new_backers;
-        msg = {_tag: ""; _recipient: _sender; _amount: res; code: reclaimed_code};
-        msgs = one_msg msg;
-        e = { _eventname: "ClaimedBack"; claimed_by: _sender; amount: res };
-        event e;
-        send msgs
-      end
+        backers <- backers;
+        current_balance <- _balance;
+        is_funded <- funded;
+        goal_not_met = builtin lt current_balance goal;
+        sender_is_backer = builtin contains backers _sender;
+        not_funded = negb is_funded;
+        backer_and_no_goal = andb goal_not_met sender_is_backer;
+        backer_and_no_goal_and_not_funded = andb not_funded backer_and_no_goal;
+        match backer_and_no_goal_and_not_funded with
+        | False =>
+            msg = {_tag: ""; _recipient: _sender; _amount: Uint128 0;code: cannot_reclaim_code};
+            msgs = one_msg msg;
+            send msgs
+        | True =>
+            res = builtin get backers _sender;
+            match res with
+            | None =>
+                msg = {_tag: ""; _recipient: _sender; _amount: Uint128 0; code: cannot_reclaim_code};
+                msgs = one_msg msg;
+                send msgs
+            | Some res =>
+                new_backers = builtin remove backers _sender;
+                backers := new_backers;
+                msg = {_tag: ""; _recipient: _sender; _amount: res; code: reclaimed_code};
+                msgs = one_msg msg;
+                e = { _eventname: "ClaimedBack"; claimed_by: _sender; amount: res };
+                event e;
+                send msgs
+            end
+        end
     end
-  end
 end
