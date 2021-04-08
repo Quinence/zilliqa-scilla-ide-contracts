@@ -58,7 +58,7 @@ contract OpenAuction (
 )
 
 (* The mutable variables *)
-field auction_auction_ended: Bool = False
+field auction_ended: Bool = False
 field highest_bidder: Option ByStr20 = None {ByStr20}
 field highest_bid: Uint128 = zero
 field pending_returns: Map ByStr20 Uint128 = Emp ByStr20 Uint128
@@ -66,13 +66,13 @@ field pending_returns: Map ByStr20 Uint128 = Emp ByStr20 Uint128
 
 (* The Bid transition *)
 transition Bid ()
-    block_numbr <- & BLOCKNUMBER;
+    block_number <- & BLOCKNUMBER;
     end_time = builtin badd auction_start bidding_time;
     after_end = builtin badd end_time one;
     ended <- auction_ended;
-    in_time = block_leq after_end block;
+    in_time = block_leq after_end block_number;
     flag1 = orb in_time ended;
-    early = block_leq block auction_start;
+    early = block_leq block_number auction_start;
     match early with
     | True =>
         msg = {_tag: ""; _recipient: _sender; _amount: zero; code: too_early_to_bid_code};
@@ -107,7 +107,7 @@ transition Bid ()
                     | Some pending_check =>
                         (* User already has some balance in the pending returns that is not claimed *)
                         builtin add highest_bid_value pending_check
-                    | None => hb
+                    | None => highest_bid_value
                 (* Prev highest bidder has no pending returns. *)
                 end;
             pending_returns[old_highest_bidder] := pending_old_highest_bidder;
@@ -132,8 +132,7 @@ end
 
 (* Withdraw transition to claim back money *)
 transition Withdraw ()
-    pending_returns_value <- pending_returns;
-    sender_pending = builtin get pending_returns_value _sender;
+    sender_pending <- pending_returns[_sender];
     match sender_pending with
     | None =>
         msg = {_tag: ""; _recipient: _sender; _amount: zero; code: nothing_to_withdraw_code};
@@ -156,7 +155,7 @@ transition AuctionEnd ()
     auction_ended_value <- auction_ended;
     auction_and_bid = builtin badd auction_start bidding_time;
     auction_has_started = block_leq auction_and_bid block;
-    auction_not_ended = negb auction_ended;
+    auction_not_ended = negb auction_ended_value;
     auction_is_running = andb auction_has_started auction_not_ended;
     match auction_is_running with
     | False =>
@@ -166,9 +165,9 @@ transition AuctionEnd ()
     | True =>
         auction_ended := true;
         highest_bid_value <- highest_bid;
-        e = {_eventname: "Auction ended"; highest_bid: hb};
+        e = {_eventname: "Auction ended"; highest_bid: highest_bid_value};
         event e;
-        msg = {_tag: ""; _recipient: beneficiary; _amount: hb; code: auction_end_code; highest_bid: hb};
+        msg = {_tag: ""; _recipient: beneficiary; _amount: highest_bid_value; code: auction_end_code; highest_bid: highest_bid_value};
         msgs = one_msg msg;
         send msgs
     end

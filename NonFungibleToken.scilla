@@ -16,14 +16,14 @@ library NonfungibleToken
 
 let one_msg =
     fun (msg : Message) =>
-    let nil_msg = Nil {Message} in
-    Cons {Message} msg nil_msg
+      let nil_msg = Nil {Message} in
+      Cons {Message} msg nil_msg
 
 let two_msgs =
-fun (msg1 : Message) =>
-fun (msg2 : Message) =>
-    let msgs_tmp = one_msg msg2 in
-    Cons {Message} msg1 msgs_tmp
+    fun (msg1 : Message) =>
+    fun (msg2 : Message) =>
+        let msgs_tmp = one_msg msg2 in
+        Cons {Message} msg1 msgs_tmp
 
 let zero = Uint256 0
 let one = Uint256 1

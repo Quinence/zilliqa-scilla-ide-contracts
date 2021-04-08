@@ -15,9 +15,9 @@ library Ecdsa
 
 (* A library function to construct a list consisting of one message *)
 let one_msg =
-  fun (msg : Message) =>
-    let nil_msg = Nil {Message} in
-    Cons {Message} msg nil_msg
+    fun (msg : Message) =>
+        let nil_msg = Nil {Message} in
+        Cons {Message} msg nil_msg
 
 (* Extract the first and second values of a pair *)
 let fst_f = @fst (ByStr32) (ByStr33)

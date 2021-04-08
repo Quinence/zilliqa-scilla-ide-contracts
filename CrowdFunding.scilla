@@ -1,175 +1,59 @@
 scilla_version 0
 
-(* CrowdFunding Contract *)
-(* Crowdfunding implements a Kickstarter-style campaign *)
-(* where users can donate funds to the contract using Donate(). *)
-(* If the campaign is successful, i.e., enough money is raised *)
-(* within a given time period, the raised money can be sent to a *)
-(* predefined account owner via GetFunds(). Else, if the campaign fails, *)
-(* then contributors can take back their donations via the transition ClaimBack(). *)
+(* ECDSATest Contract *)
+(* A sample contract to test the generation of *)
+(* a ECDSA public/private keypairs, signing of a  message *)
+(* with the private keys, and verification of the signature. *)
 
 (* Imported library *)
-import BoolUtils
+import PairUtils
 
 (***************************************************)
 (*               Associated library                *)
 (***************************************************)
-library Crowdfunding
+library Ecdsa
 
 (* A library function to construct a list consisting of one message *)
 let one_msg =
-    fun (msg: Message) =>
-        let nil_msg = Nil {Message} in
-        Cons {Message} msg nil_msg
+  fun (msg : Message) =>
+    let nil_msg = Nil {Message} in
+    Cons {Message} msg nil_msg
 
-(* A library function to check if the sender is already a backer *)
-let check_update =
-    fun (backers: Map ByStr20 Uint128) =>
-    fun (sender: ByStr20) =>
-    fun (amount: Uint128) =>
-        let sender_is_backer = builtin contains backers sender in
-        match sender_is_backer with
-        | False =>
-            let new_backers = builtin put backers sender amount in
-            Some {Map ByStr20 Uint128} new_backers
-        | True => None {Map ByStr20 Uint128}
-        end
-
-(* A library function to check if the first block is less than *)
-(* or equal than the second block with respect to the block time *)
-let block_leq =
-    fun (block1: BNum) =>
-    fun (block2: BNum) =>
-        let block_lt = builtin blt block1 block2 in
-        let block_eq = builtin eq block1 block2 in
-        orb block_lt block_eq
-
-(* Library codes to be used for communication *)
-let accepted_code = Int32 1
-let missed_deadline_code = Int32 2
-let already_backed_code = Int32 3
-let not_owner_code = Int32 4
-let too_early_code = Int32 5
-let got_funds_code = Int32 6
-let cannot_get_funds_code = Int32 7
-let cannot_reclaim_code = Int32 8
-let reclaimed_code = Int32 9
-
+(* Extract the first and second values of a pair *)
+let fst_f = @fst (ByStr32) (ByStr33)
+let snd_f = @snd (ByStr32) (ByStr33)
 
 (***************************************************)
 (*             The contract definition             *)
 (***************************************************)
-contract Crowdfunding (
-    owner: ByStr20,
-    max_block: BNum,
-    goal: Uint128
-)
+contract Ecdsa ()
 
-(* The mutable variables *)
-field backers: Map ByStr20 Uint128 = Emp ByStr20 Uint128
-field funded: Bool = False
+(* The mutable variable initiated as None *)
+(* The compressed public key is a 33 bytes integer *)
+field pub_key : Option (ByStr33) = None {ByStr33}
 
-(* The Donate transition *)
-transition Donate ()
-    (* Fetch the value of the blockchain state variable BLOCKNUMBER, *)
-    (* and store it into the local variable block. *)
-    block <- & BLOCKNUMBER;
-    in_time = block_leq block max_block;
-    match in_time with
-    | True =>
-        backers_list <- backers;
-        res = check_update backers_list _sender _amount;
-        match res with
-        | None =>
-            msg = {_tag: ""; _recipient: _sender; _amount: Uint128 0; code: already_backed_code};
-            msgs = one_msg msg;
-            send msgs
-        | Some backers_list =>
-            backers := backers_list;
-            accept;
-            msg = {_tag: ""; _recipient: _sender; _amount: Uint128 0; code: accepted_code};
-            msgs = one_msg msg;
-            e = { _eventname: "DonationAccepted"; donor: _sender; amount: _amount };
-            event e;
-            send msgs
-        end
-    | False =>
-        msg = {_tag: ""; _recipient: _sender; _amount: Uint128 0; code: missed_deadline_code};
-        msgs = one_msg msg;
-        send msgs
-    end
-end
-
-(* The GetFunds transition *)
-transition GetFunds ()
-    is_owner = builtin eq owner _sender;
-    match is_owner with
-    | False =>
-        msg = {_tag: ""; _recipient: _sender; _amount: Uint128 0; code: not_owner_code};
-        msgs = one_msg msg;
-        send msgs
-    | True =>
-        block <- & BLOCKNUMBER;
-        in_time = block_leq block max_block;
-        not_in_time = negb in_time;
-        current_balance <- _balance;
-        goal_not_met = builtin lt current_balance goal;
-        goal_met = negb goal_not_met;
-        cannot_get_funds_check = andb not_in_time goal_not_met;
-        match cannot_get_funds_check with
-        | False =>
-            msg = {_tag: ""; _recipient: _sender; _amount: Uint128 0; code: cannot_get_funds_code};
-            msgs = one_msg msg;
-            send msgs
+(* The verify transition *)
+transition verify (msg : ByStr, sig : ByStr64)
+    pubk_o <- pub_key;
+    match pubk_o with
+    | Some pubk =>
+        sig_verification = builtin ecdsa_verify pubk msg sig;
+        match sig_verification with
+        (* ECDSA verification is successful *)
         | True =>
-            true = True;
-            funded := true;
-            msg = {_tag: ""; _recipient: owner; _amount: current_balance; code: got_funds_code};
-            msgs = one_msg msg;
-            send msgs
-        end
-    end
-end
-
-(* The ClaimBack transition *)
-transition ClaimBack ()
-    block <- & BLOCKNUMBER;
-    after_deadline = builtin blt max_block block;
-    match after_deadline with
-    | False =>
-        msg = {_tag: ""; _recipient: _sender; _amount: Uint128 0; code: too_early_code};
-        msgs = one_msg msg;
-        send msgs
-    | True =>
-        backers <- backers;
-        current_balance <- _balance;
-        is_funded <- funded;
-        goal_not_met = builtin lt current_balance goal;
-        sender_is_backer = builtin contains backers _sender;
-        not_funded = negb is_funded;
-        backer_and_no_goal = andb goal_not_met sender_is_backer;
-        backer_and_no_goal_and_not_funded = andb not_funded backer_and_no_goal;
-        match backer_and_no_goal_and_not_funded with
+            m = { _tag : ""; _recipient : _sender; _amount : Uint128 0; status : "verification successful" };
+            mone = one_msg m;
+            send mone
+        (* ECDSA verification failed *)
         | False =>
-            msg = {_tag: ""; _recipient: _sender; _amount: Uint128 0;code: cannot_reclaim_code};
-            msgs = one_msg msg;
-            send msgs
-        | True =>
-            res = builtin get backers _sender;
-            match res with
-            | None =>
-                msg = {_tag: ""; _recipient: _sender; _amount: Uint128 0; code: cannot_reclaim_code};
-                msgs = one_msg msg;
-                send msgs
-            | Some res =>
-                new_backers = builtin remove backers _sender;
-                backers := new_backers;
-                msg = {_tag: ""; _recipient: _sender; _amount: res; code: reclaimed_code};
-                msgs = one_msg msg;
-                e = { _eventname: "ClaimedBack"; claimed_by: _sender; amount: res };
-                event e;
-                send msgs
-            end
+            m = { _tag : ""; _recipient : _sender; _amount : Uint128 0; status : "verification failed" };
+            mone = one_msg m;
+            send mone
         end
+    | None =>
+        (* We don't have a key-pair. *)
+        m = { _tag : ""; _recipient : _sender; _amount : Uint128 0; status : "no key error" };
+        mone = one_msg m;
+        send mone
     end
 end
