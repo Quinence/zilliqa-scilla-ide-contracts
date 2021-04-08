@@ -1,5 +1,17 @@
 scilla_version 0
 
+(* ZilGame Contract *)
+(* A two-player game where the goal is to find the closest preimage of a given SHA256 digest (puzzle). *)
+(* More formally, given a digest d, and two values x and y, x is said to be a closer preimage than y of d *)
+(* if Distance(SHA-256(x), d) < Distance(SHA-256(y), d), for some Distance function. The game is played in *)
+(* two phases. In the first phase, players submit their hash, i.e., SHA-256(x) and SHA-256(y) using the *)
+(* transition Play(guess: ByStr32). Once the first player has submitted her hash, the second player has a *)
+(* bounded time to submit her hash. If the second player does not submit her hash within the stipulated time, *)
+(* then the first player may become the winner. In the second phase, players have to submit the corresponding *)
+(* values x or y using the transition ClaimReward(solution: Int128). The player submitting the closest preimage *)
+(* is declared the winner and wins a reward. The contract also provides a transition Withdraw () to recover *)
+(* funds and send to a specified owner in case no player plays the game. *)
+
 (***************************************************)
 (*                 Imported library                *)
 (***************************************************)
@@ -35,7 +47,7 @@ let update_hash =
     fun (h: ByStr32) =>
         match oh with
         | Some x => Some {ByStr32} x
-        | None   => Some {ByStr32} h
+        | None => Some {ByStr32} h
         end
 
 let update_timer =
@@ -43,7 +55,7 @@ let update_timer =
     fun (b: BNum) =>
         match tm with
         | Some x => Some {BNum} x
-        | None   =>
+        | None =>
             let window = Uint32 11 in
             let b1 = builtin badd b window in
             Some {BNum} b1
@@ -77,8 +89,8 @@ let check_validity =
     fun (guess_b: Option ByStr32) =>
         let ca = builtin eq pa a in
         let cb = builtin eq pb a in
-        let xa = Pair {Bool (Option ByStr32)} ca guess_a in 
-        let xb = Pair {Bool (Option ByStr32)} cb guess_b in 
+        let xa = Pair {Bool (Option ByStr32)} ca guess_a in
+        let xb = Pair {Bool (Option ByStr32)} cb guess_b in
         match xa with
         | Pair True (Some g) =>
             let h = builtin sha256hash solution in
@@ -101,12 +113,12 @@ let can_withdraw =
             builtin blt deadline b
 
 (* In the case of equal results, or no results the prise goes to the owner *)
-let determine_winner = 
-    fun (puzzle  : ByStr32) =>
-    fun (guess_a : Option ByStr32) =>
-    fun (guess_b : Option ByStr32) =>
-    fun (pa      : ByStr20) =>
-    fun (pb      : ByStr20) =>
+let determine_winner =
+    fun (puzzle: ByStr32) =>
+    fun (guess_a: Option ByStr32) =>
+    fun (guess_b: Option ByStr32) =>
+    fun (pa: ByStr20) =>
+    fun (pb: ByStr20) =>
     fun (oa      : ByStr20) =>
         let gab = Pair { (Option ByStr32) (Option ByStr32) } guess_a guess_b in
         match gab with
@@ -114,18 +126,18 @@ let determine_winner =
             let d1 = hash_dist puzzle ga in
             let d2 = hash_dist puzzle gb in
             let c1 = builtin lt d1 d2 in
-            match c1 with 
+            match c1 with
             | True => pa
-            | False => 
+            | False =>
                 let c2 = builtin eq d1 d2 in
-                match c2 with 
+                match c2 with
                 | False => pb
-                | True  => oa
+                | True => oa
                 end
             end
         | Pair (Some _) None => pa
         | Pair None (Some _) => pb
-        | Pair None None     => oa
+        | Pair None None => oa
         end
 
 let solution_submitted = Int32 1
@@ -215,7 +227,7 @@ transition ClaimReward(solution: Int128)
             msgs = one_msg msg;
             send msgs
         | True =>
-            winner = determine_winner puzzle pa pb player_a player_b owner; 
+            winner = determine_winner puzzle pa pb player_a player_b owner;
             bal <- _balance;
             msg = {_tag: ""; _recipient: winner; _amount: bal; code: here_is_the_reward};
             msgs = one_msg msg;

@@ -2,8 +2,8 @@ scilla_version 0
 
 (* ECDSATest Contract *)
 (* A sample contract to test the generation of *)
-(* a ECDSA public/private keypairs, signing of a *)
-(* message with the private keys, and verification of the signature. *)
+(* a ECDSA public/private keypairs, signing of a  message *)
+(* with the private keys, and verification of the signature. *)
 
 (* Imported library *)
 import PairUtils
@@ -14,8 +14,8 @@ import PairUtils
 library Ecdsa
 
 (* A library function to construct a list consisting of one message *)
-let one_msg = 
-  fun (msg : Message) => 
+let one_msg =
+  fun (msg : Message) =>
     let nil_msg = Nil {Message} in
     Cons {Message} msg nil_msg
 

@@ -1,5 +1,10 @@
 scilla_version 0
 
+(* FungibleToken Contract *)
+(* ZRC-2 Fungible token standard contract for creating fungible digital *)
+(* assets such as stablecoins, utility tokens, and loyalty points. *)
+
+
 (***************************************************)
 (*                Imported library                 *)
 (***************************************************)
@@ -41,7 +46,7 @@ let make_error =
             end
         in
             { _exception: "Error"; code: result_code }
-  
+
 let zero = Uint128 0
 
 let get_val =
@@ -65,7 +70,7 @@ contract FungibleToken (
 (* Mutable fields *)
 field total_supply: Uint128 = init_supply
 
-field balances: Map ByStr20 Uint128 
+field balances: Map ByStr20 Uint128
     = let emp_map = Emp ByStr20 Uint128 in
         builtin put emp_map contract_owner init_supply
 

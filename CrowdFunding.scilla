@@ -28,11 +28,11 @@ let check_update =
     fun (sender: ByStr20) =>
     fun (amount: Uint128) =>
         let sender_is_backer = builtin contains backers sender in
-        match sender_is_backer with 
-        | False => 
+        match sender_is_backer with
+        | False =>
             let new_backers = builtin put backers sender amount in
-            Some {Map ByStr20 Uint128} new_backers 
-        | True  => None {Map ByStr20 Uint128}
+            Some {Map ByStr20 Uint128} new_backers
+        | True => None {Map ByStr20 Uint128}
         end
 
 (* A library function to check if the first block is less than *)
@@ -40,14 +40,14 @@ let check_update =
 let block_leq =
     fun (block1: BNum) =>
     fun (block2: BNum) =>
-        let block_lt = builtin blt block1 block2 in 
-        let block_eq = builtin eq block1 block2 in 
+        let block_lt = builtin blt block1 block2 in
+        let block_eq = builtin eq block1 block2 in
         orb block_lt block_eq
 
 (* Library codes to be used for communication *)
 let accepted_code = Int32 1
 let missed_deadline_code = Int32 2
-let already_backed_code  = Int32 3
+let already_backed_code = Int32 3
 let not_owner_code = Int32 4
 let too_early_code = Int32 5
 let got_funds_code = Int32 6
@@ -80,13 +80,13 @@ transition Donate ()
         backers_list <- backers;
         res = check_update backers_list _sender _amount;
         match res with
-        | None => 
+        | None =>
             msg = {_tag: ""; _recipient: _sender; _amount: Uint128 0; code: already_backed_code};
             msgs = one_msg msg;
             send msgs
         | Some backers_list =>
-            backers := backers_list; 
-            accept; 
+            backers := backers_list;
+            accept;
             msg = {_tag: ""; _recipient: _sender; _amount: Uint128 0; code: accepted_code};
             msgs = one_msg msg;
             e = { _eventname: "DonationAccepted"; donor: _sender; amount: _amount };
@@ -97,7 +97,7 @@ transition Donate ()
         msg = {_tag: ""; _recipient: _sender; _amount: Uint128 0; code: missed_deadline_code};
         msgs = one_msg msg;
         send msgs
-    end 
+    end
 end
 
 (* The GetFunds transition *)
