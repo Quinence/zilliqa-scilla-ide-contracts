@@ -119,7 +119,7 @@ let determine_winner =
     fun (guess_b: Option ByStr32) =>
     fun (pa: ByStr20) =>
     fun (pb: ByStr20) =>
-    fun (oa      : ByStr20) =>
+    fun (oa: ByStr20) =>
         let gab = Pair { (Option ByStr32) (Option ByStr32) } guess_a guess_b in
         match gab with
         | Pair (Some ga) (Some gb) =>

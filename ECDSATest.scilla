@@ -2,7 +2,7 @@ scilla_version 0
 
 (* ECDSATest Contract *)
 (* A sample contract to test the generation of *)
-(* a ECDSA public/private keypairs, signing of a  message *)
+(* a ECDSA public/private keypairs, signing of a message *)
 (* with the private keys, and verification of the signature. *)
 
 (* Imported library *)
@@ -41,18 +41,18 @@ transition verify(msg : ByStr, sig : ByStr64)
         match sig_verification with
         (* ECDSA verification is successful *)
         | True =>
-            m = { _tag : ""; _recipient : _sender; _amount : Uint128 0; status : "verification successful" };
+            m = { _tag : ""; _recipient : _sender; _amount : Uint128 0; status : "Verification Successful" };
             mone = one_msg m;
             send mone
         (* ECDSA verification failed *)
         | False =>
-            m = { _tag : ""; _recipient : _sender; _amount : Uint128 0; status : "verification failed" };
+            m = { _tag : ""; _recipient : _sender; _amount : Uint128 0; status : "Verification Failed" };
             mone = one_msg m;
             send mone
         end
     | None =>
         (* We don't have a key-pair. *)
-        m = { _tag : ""; _recipient : _sender; _amount : Uint128 0; status : "no key error" };
+        m = { _tag : ""; _recipient : _sender; _amount : Uint128 0; status : "No Key Error" };
         mone = one_msg m;
         send mone
     end

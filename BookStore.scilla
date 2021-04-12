@@ -35,11 +35,11 @@ let code_bookid_exist = Uint32 4
 (***************************************************)
 (*             The contract definition             *)
 (***************************************************)
-contract BookStore
-(owner: ByStr20,
-storeName: String)
-
-(* storeName can be immutable if it won't ever be changed             *)
+contract BookStore (
+    owner: ByStr20,
+    storeName: String
+)
+(* storeName can be immutable if it won't ever be changed *)
 
 
 (* Membership data consists of three attributes: ByStr20, Name and typeOfMember*)
@@ -56,7 +56,7 @@ field members: Map ByStr20 (Pair (String) (Uint32))
 (* lastBookID: last book ID issued *)
 field lastBookID: Option Uint32 = None {Uint32}
 
-(* Bookinventory will store a Map of Books                          *)
+(* Bookinventory will store a Map of Books *)
 field bookInventory: Map Uint32 (Pair (String) (String))
                     = Emp Uint32 (Pair (String) (String))
 
@@ -69,7 +69,7 @@ field bookInventory: Map Uint32 (Pair (String) (String))
 (*     String Author;                                               *)
 (* }                                                                *)
 
-(* ======== transitions ===============*)
+(* =============== transitions =============== *)
 
 
 (* @notice: add member is an example. It is not used in other functions. *)

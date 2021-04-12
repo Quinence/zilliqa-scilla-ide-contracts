@@ -25,9 +25,9 @@ let one_msg =
 let block_leq =
     fun (block1: BNum) =>
     fun (block2: BNum) =>
-        let bc1 = builtin blt block1 block2 in
-        let bc2 = builtin eq block1 block2 in
-        orb bc1 bc2
+        let block_lt = builtin blt block1 block2 in
+        let block_eq = builtin eq block1 block2 in
+        orb block_lt block_eq
 
 (* Library codes to be used for communication *)
 let late_to_bid_code = Int32 1
@@ -104,13 +104,13 @@ transition Bid ()
                     pending_check <- pending_returns[old_highest_bidder];
 
                     pending_old_highest_bidder = match pending_check with
-                    | Some pending_check =>
-                        (* User already has some balance in the pending returns that is not claimed *)
-                        builtin add highest_bid_value pending_check
-                    | None => highest_bid_value
-                (* Prev highest bidder has no pending returns. *)
-                end;
-            pending_returns[old_highest_bidder] := pending_old_highest_bidder;
+                        | Some pending_check =>
+                            (* User already has some balance in the pending returns that is not claimed *)
+                            builtin add highest_bid_value pending_check
+                        | None => highest_bid_value
+                        (* Prev highest bidder has no pending returns. *)
+                        end;
+                    pending_returns[old_highest_bidder] := pending_old_highest_bidder;
                     (* Update the highest bidder *)
                     bidder = Some {ByStr20} _sender;
                     highest_bidder := bidder;
@@ -152,12 +152,12 @@ end
 (* AuctionEnd transition to end the auction *)
 transition AuctionEnd ()
     block <- & BLOCKNUMBER;
-    auction_ended_value <- auction_ended;
+    ended <- auction_ended;
     auction_and_bid = builtin badd auction_start bidding_time;
-    auction_has_started = block_leq auction_and_bid block;
-    auction_not_ended = negb auction_ended_value;
-    auction_is_running = andb auction_has_started auction_not_ended;
-    match auction_is_running with
+    auction_start_check = block_leq auction_and_bid block;
+    not_ended = negb ended;
+    auction_check = andb auction_start_check not_ended;
+    match auction_check with
     | False =>
         msg = {_tag: ""; _recipient: _sender; _amount: zero; code: auction_is_still_on_code};
         msgs = one_msg msg;

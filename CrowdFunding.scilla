@@ -141,11 +141,11 @@ transition ClaimBack ()
         msgs = one_msg msg;
         send msgs
     | True =>
-        backers <- backers;
+        backers_list <- backers;
         current_balance <- _balance;
         is_funded <- funded;
         goal_not_met = builtin lt current_balance goal;
-        sender_is_backer = builtin contains backers _sender;
+        sender_is_backer = builtin contains backers_list _sender;
         not_funded = negb is_funded;
         backer_and_no_goal = andb goal_not_met sender_is_backer;
         backer_and_no_goal_and_not_funded = andb not_funded backer_and_no_goal;
@@ -155,15 +155,14 @@ transition ClaimBack ()
             msgs = one_msg msg;
             send msgs
         | True =>
-            res = builtin get backers _sender;
+            res = builtin get backers_list _sender;
             match res with
             | None =>
                 msg = {_tag: ""; _recipient: _sender; _amount: Uint128 0; code: cannot_reclaim_code};
                 msgs = one_msg msg;
                 send msgs
             | Some res =>
-                new_backers = builtin remove backers _sender;
-                backers := new_backers;
+                delete backers_list[_sender];
                 msg = {_tag: ""; _recipient: _sender; _amount: res; code: reclaimed_code};
                 msgs = one_msg msg;
                 e = { _eventname: "ClaimedBack"; claimed_by: _sender; amount: res };
