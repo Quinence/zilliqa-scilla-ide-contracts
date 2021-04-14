@@ -3,7 +3,7 @@ scilla_version 0
 (* Auction Contract *)
 (* A simple open auction contract where bidders can make their bid using Bid(), *)
 (* and the highest and winning bid amount goes to a predefined account. Bidders who *)
-(* don’t win can take back their bid using the transition Withdraw(). The organizer *)
+(* dont win can take back their bid using the transition Withdraw(). The organizer *)
 (* of the auction can claim the highest bid by invoking the transition AuctionEnd(). *)
 
 (* Imported library *)
@@ -88,8 +88,8 @@ transition Bid ()
             highest_bid_value <- highest_bid;
 
             (* Checks if the bid is too low *)
-            sufficientBid = builtin lt highest_bid_value _amount;
-            match sufficientBid with
+            sufficient_bid = builtin lt highest_bid_value _amount;
+            match sufficient_bid with
             | False =>
                 msg = {_tag: ""; _recipient: _sender; _amount: zero; code: bid_too_low_code};
                 msgs = one_msg msg;
@@ -151,10 +151,10 @@ end
 
 (* AuctionEnd transition to end the auction *)
 transition AuctionEnd ()
-    block <- & BLOCKNUMBER;
+    block_number <- & BLOCKNUMBER;
     ended <- auction_ended;
     auction_and_bid = builtin badd auction_start bidding_time;
-    auction_start_check = block_leq auction_and_bid block;
+    auction_start_check = block_leq auction_and_bid block_number;
     not_ended = negb ended;
     auction_check = andb auction_start_check not_ended;
     match auction_check with
